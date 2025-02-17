@@ -1,0 +1,2 @@
+//GET http://127.0.0.1:5000/beacons
+POST http://127.0.0.1:5000/beacons/67b2b85e489e8e15c8f329b7/upvote
