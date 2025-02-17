@@ -1,53 +1,61 @@
 const express = require('express');
-const { ObjectId } = require('mongodb');
-const { getDB } = require('../config/db');
-
 const router = express.Router();
+const Beacon = require('../models/Beacon');
 
-// GET and POST /beacons
 router.get('/beacons', async (req, res) => {
     try {
-        const collection = getDB().collection('entries');
-        const beacons = await collection.find({}).toArray();
-        res.json(beacons.map(beacon => ({
-            ...beacon,
-            _id: beacon._id.toString()
-        })));
+        const beacons = await Beacon.find().sort({ createdAt: -1 });
+        res.json(beacons);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
-
+//
 router.post('/beacons', async (req, res) => {
     try {
-        const collection = getDB().collection('entries');
-        await collection.insertOne(req.body);
-        res.status(201).json({ status: 'success' });
+        const beacon = new Beacon({
+            title: req.body.title,
+            description: req.body.description,
+            location: req.body.location,
+            lat: req.body.lat,
+            lng: req.body.lng,
+            image: req.body.image,
+            accessibility: {
+                wheelchair: req.body.accessibility?.wheelchair || false,
+                audio: req.body.accessibility?.audio || false,
+                vision: req.body.accessibility?.vision || false
+            }
+        });
+        await beacon.save();
+        res.status(201).json(beacon);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ error: error.message });
     }
 });
 
-// DELETE /ansel/:beacon_id
 router.delete('/ansel/:beacon_id', async (req, res) => {
     try {
-        const collection = getDB().collection('entries');
-        await collection.deleteOne({ _id: new ObjectId(req.params.beacon_id) });
+        const beacon = await Beacon.findByIdAndDelete(req.params.beacon_id);
+        if (!beacon) {
+            return res.status(404).json({ error: 'Beacon not found' });
+        }
         res.json({ status: 'success' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Voting routes
 router.post('/beacons/:beaconId/upvote', async (req, res) => {
     try {
-        const collection = getDB().collection('entries');
-        await collection.updateOne(
-            { _id: new ObjectId(req.params.beaconId) },
-            { $inc: { 'entry.votes': 1 } }
+        const beacon = await Beacon.findByIdAndUpdate(
+            req.params.beaconId,
+            { $inc: { votes: 1 } },
+            { new: true }
         );
-        res.json({ status: 'success' });
+        if (!beacon) {
+            return res.status(404).json({ error: 'Beacon not found' });
+        }
+        res.json(beacon);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -55,12 +63,15 @@ router.post('/beacons/:beaconId/upvote', async (req, res) => {
 
 router.post('/beacons/:beaconId/downvote', async (req, res) => {
     try {
-        const collection = getDB().collection('entries');
-        await collection.updateOne(
-            { _id: new ObjectId(req.params.beaconId) },
-            { $inc: { 'entry.votes': -1 } }
+        const beacon = await Beacon.findByIdAndUpdate(
+            req.params.beaconId,
+            { $inc: { votes: -1 } },
+            { new: true }
         );
-        res.json({ status: 'success' });
+        if (!beacon) {
+            return res.status(404).json({ error: 'Beacon not found' });
+        }
+        res.json(beacon);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

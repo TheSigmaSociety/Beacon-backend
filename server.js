@@ -1,10 +1,15 @@
+require('dotenv').config();
+
+// Validate required environment variables
+if (!process.env.MONGODB_URI) {
+    console.error('MONGODB_URI is not defined in environment variables');
+    process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const { connectDB } = require('./config/db');
+const connectDB = require('./config/database');
 const beaconRoutes = require('./routes/beacons');
-
-dotenv.config();
 
 // Configure CORS options
 const corsOptions = {
@@ -22,7 +27,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Connect to MongoDB
-connectDB();
+connectDB(); // This will now work correctly
 
 // Routes
 app.use('/', beaconRoutes);
