@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Beacon = require('../models/Beacon');
 
+// GET /beacons - Retrieve all beacons, sorted by most recent first
 router.get('/beacons', async (req, res) => {
     try {
         const beacons = await Beacon.find().sort({ createdAt: -1 });
@@ -10,7 +11,8 @@ router.get('/beacons', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-//
+
+// POST /beacons - Create a new beacon with accessibility options
 router.post('/beacons', async (req, res) => {
     try {
         const beacon = new Beacon({
@@ -33,6 +35,7 @@ router.post('/beacons', async (req, res) => {
     }
 });
 
+// DELETE /ansel/:beacon_id - Remove a specific beacon by ID
 router.delete('/ansel/:beacon_id', async (req, res) => {
     try {
         const beacon = await Beacon.findByIdAndDelete(req.params.beacon_id);
@@ -45,6 +48,7 @@ router.delete('/ansel/:beacon_id', async (req, res) => {
     }
 });
 
+// POST /beacons/:beaconId/upvote - Increment the vote count for a beacon
 router.post('/beacons/:beaconId/upvote', async (req, res) => {
     try {
         const beacon = await Beacon.findByIdAndUpdate(
@@ -61,6 +65,7 @@ router.post('/beacons/:beaconId/upvote', async (req, res) => {
     }
 });
 
+// POST /beacons/:beaconId/downvote - Decrement the vote count for a beacon
 router.post('/beacons/:beaconId/downvote', async (req, res) => {
     try {
         const beacon = await Beacon.findByIdAndUpdate(
